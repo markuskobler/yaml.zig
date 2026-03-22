@@ -56,9 +56,9 @@ pub const Scanner = struct {
     line: usize,
     column: usize,
     allocator: Allocator,
-    indent_stack: std.ArrayList(usize),
+    indent_stack: std.ArrayListUnmanaged(usize),
     flow_level: usize,
-    tokens: std.ArrayList(Token),
+    tokens: std.ArrayListUnmanaged(Token),
     done: bool,
 
     pub fn init(allocator: Allocator, input: []const u8) !Scanner {
@@ -68,9 +68,9 @@ pub const Scanner = struct {
             .line = 1,
             .column = 1,
             .allocator = allocator,
-            .indent_stack = std.ArrayList(usize){},
+            .indent_stack = .empty,
             .flow_level = 0,
-            .tokens = std.ArrayList(Token){},
+            .tokens = .empty,
             .done = false,
         };
         try scanner.indent_stack.append(allocator, 0);
@@ -253,7 +253,7 @@ pub const Scanner = struct {
 
     fn scanSingleQuoted(self: *Scanner, indent: usize) !Token.Scalar {
         self.advance(); // Skip opening '
-        var buf = std.ArrayList(u8){};
+        var buf: std.ArrayListUnmanaged(u8) = .empty;
         defer buf.deinit(self.allocator);
 
         while (self.pos < self.input.len) {
@@ -285,7 +285,7 @@ pub const Scanner = struct {
 
     fn scanDoubleQuoted(self: *Scanner, indent: usize) !Token.Scalar {
         self.advance(); // Skip opening "
-        var buf = std.ArrayList(u8){};
+        var buf: std.ArrayListUnmanaged(u8) = .empty;
         defer buf.deinit(self.allocator);
 
         while (self.pos < self.input.len) {
@@ -367,7 +367,7 @@ pub const Scanner = struct {
             self.advance();
         }
 
-        var buf = std.ArrayList(u8){};
+        var buf: std.ArrayListUnmanaged(u8) = .empty;
         defer buf.deinit(self.allocator);
 
         const base_indent = self.column - 1;
